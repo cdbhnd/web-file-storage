@@ -19,7 +19,7 @@ app.get('*', (req, res) => {
   if (req.query && req.query.resize) {
     const widthString = req.query.width
     const heightString = req.query.height
-    const newResize = req.query.newResize;
+    const newResizeParam = req.query.newResize;
     let format = req.query.format
 
     // Parse to integer if possible
@@ -37,7 +37,7 @@ app.get('*', (req, res) => {
     res.type(`image/${format}`)
 
     // Get the resized image
-    if (newResize) {
+    if (newResizeParam) {
       return newResize(`${__dirname}/uploads${cleanUrl}`, width, height).pipe(res)
     } else {
       return resize(`${__dirname}/uploads${cleanUrl}`, format, width, height).pipe(res)
