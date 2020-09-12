@@ -1,7 +1,7 @@
 const fs = require('fs')
 const sharp = require('sharp')
 
-module.exports = function resize(path, width, height) {
+module.exports = function newResize(path, width, height) {
   const image = sharp(path);
   image
     .metadata()

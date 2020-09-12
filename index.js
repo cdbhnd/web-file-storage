@@ -38,7 +38,7 @@ app.get('*', (req, res) => {
 
     // Get the resized image
     if (newResize) {
-      return newResize(`${__dirname}/uploads${cleanUrl}`, format, width, height).pipe(res)
+      return newResize(`${__dirname}/uploads${cleanUrl}`, width, height).pipe(res)
     } else {
       return resize(`${__dirname}/uploads${cleanUrl}`, format, width, height).pipe(res)
     }
