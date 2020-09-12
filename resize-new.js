@@ -3,7 +3,7 @@ const sharp = require('sharp')
 
 module.exports = function newResize(path, width, height) {
   const image = sharp(path);
-  image
+  return image
     .metadata()
     .then(function (metadata) {
       if (metadata.width < width) {
