@@ -15,7 +15,7 @@ var app = express();
 app.use(authorizationMiddleware);
 
 app.get('*', (req, res) => {
-  const cleanUrl = url.parse(req.url).pathname;
+  const cleanUrl = decodeURIComponent(url.parse(req.url).pathname);
   if (req.query && req.query.resize) {
     const widthString = req.query.width
     const heightString = req.query.height
@@ -55,4 +55,4 @@ app.get('*', (req, res) => {
 
 app.use(fileStore.routes);
 
-app.listen(4222);
+app.listen(4200);
