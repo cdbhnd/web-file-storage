@@ -3,6 +3,7 @@ var FileStore = require('express-file-store');
 var authorizationMiddleware = require('./authorization');
 const url = require('url');
 const resize = require('./resize')
+const newResize = require('./resize-new')
 
 // using file system
 var fileStore = FileStore('fs', {
@@ -18,6 +19,7 @@ app.get('*', (req, res) => {
   if (req.query && req.query.resize) {
     const widthString = req.query.width
     const heightString = req.query.height
+    const newResize = req.query.newResize;
     let format = req.query.format
 
     // Parse to integer if possible
@@ -35,7 +37,11 @@ app.get('*', (req, res) => {
     res.type(`image/${format}`)
 
     // Get the resized image
-    return resize(`${__dirname}/uploads${cleanUrl}`, format, width, height).pipe(res)
+    if (newResize) {
+      return newResize(`${__dirname}/uploads${cleanUrl}`, format, width, height).pipe(res)
+    } else {
+      return resize(`${__dirname}/uploads${cleanUrl}`, format, width, height).pipe(res)
+    }
   } else {
     return fileStore.get(cleanUrl, function (err, file) {
       if (file) {
