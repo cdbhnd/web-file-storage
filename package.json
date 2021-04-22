@@ -11,7 +11,12 @@
   "license": "ISC",
   "dependencies": {
     "express": "4.16.4",
-    "express-file-store": "1.0.3",
+    "express-file-store": "^1.0.3",
+    "gifsicle": "^5.2.0",
+    "pngquant-bin": "^6.0.0",
     "sharp": "^0.23.3"
+  },
+  "devDependencies": {
+    "compress-images": "^1.9.9"
   }
 }
