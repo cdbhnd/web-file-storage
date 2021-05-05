@@ -5,7 +5,9 @@ const url = require('url');
 const resize = require('./resize')
 const newResize = require('./resize-new')
 const fs = require('fs');
+const fsPromises = require('fs').promises;
 const compress_images = require('compress-images');
+const { compress } = require('compress-images/promise');
 const path = require('path');
 const { on } = require('events');
 
@@ -17,6 +19,66 @@ var fileStore = FileStore('fs', {
 var app = express();
 
 app.use(authorizationMiddleware);
+
+app.put('/compress-all', async(req, res)=>{
+
+  const processImages = async(input, savePath)=>{
+    const result = await compress({
+      source: input,
+      destination: './compressed/',
+      enginesSetup: {
+        jpg: { engine: "mozjpeg", command: ["-quality", "60"] },
+        png: { engine: "pngquant", command: ["--quality=20-50", "-o"] },
+        svg: { engine: "svgo", command: "--multipass" },
+        gif: { engine: "gifsicle", command: ["--colors", "64", "--use-col=web"] },
+      },
+      params: { compress_force: true, statistic: true, autoupdate: true },
+
+    })
+    const { statistics, errors } = result;
+    if(errors.length) {
+      console.log(errors);
+      return false;
+    }
+    return true;
+  }
+
+  const loopThroughFolder = async(files, currentPath) =>{
+    for(let f=0; f<files.length; f++) {
+      if(fs.lstatSync(path.join(currentPath, files[f])).isFile()) {
+          const comp = await processImages(`${currentPath}/${files[f]}`, `${currentPath}/`);
+          if(!comp) {
+            console.log(path.join(currentPath, files[f])+" not compressed")
+            break;
+          }
+          try {
+            await fsPromises.rename(path.join(__dirname, 'compressed', files[f]), path.join(currentPath, files[f]));
+            console.log(`File ${path.join(currentPath, files[f])} compressed and saved`);
+          } catch(err) {
+            console.log(`File ${path.join(currentPath, files[f])} compressed but not saved because ${err}`);
+          }
+
+      }
+      if(fs.lstatSync(path.join(currentPath, files[f])).isDirectory()) {
+        fs.readdir(path.join(currentPath, files[f]), async(err, innerFiles)=>{
+          if(err) {
+            return res.status(500).send('Something went wrong');
+          }
+          await loopThroughFolder(innerFiles, path.join(currentPath, files[f]));
+        })
+      }
+    }
+  };
+
+  fs.readdir(path.join(__dirname, 'uploads'), async(err, uploadFiles)=>{
+    if(err) {
+      return res.status(500).send('Something went wrong');
+    }
+    await loopThroughFolder(uploadFiles, path.join(__dirname, 'uploads'));
+    return res.status(200).send('OK');
+  });
+
+});
 
 app.post('*', (req, res)=> {
   const contentType = req.headers['content-type'];
