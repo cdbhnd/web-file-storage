@@ -9,7 +9,6 @@ const fsPromises = require('fs').promises;
 const compress_images = require('compress-images');
 const { compress } = require('compress-images/promise');
 const path = require('path');
-const { on } = require('events');
 
 // using file system
 var fileStore = FileStore('fs', {
@@ -20,9 +19,9 @@ var app = express();
 
 app.use(authorizationMiddleware);
 
-app.put('/compress-all', async(req, res)=>{
+app.put('/compress-all', async (req, res) => {
 
-  const processImages = async(input, savePath)=>{
+  const processImages = async (input, savePath) => {
     const result = await compress({
       source: input,
       destination: './compressed/',
@@ -36,33 +35,34 @@ app.put('/compress-all', async(req, res)=>{
 
     })
     const { statistics, errors } = result;
-    if(errors.length) {
+    if (errors.length) {
       console.log(errors);
       return false;
     }
     return true;
   }
 
-  const loopThroughFolder = async(files, currentPath) =>{
-    for(let f=0; f<files.length; f++) {
-      if(fs.lstatSync(path.join(currentPath, files[f])).isFile()) {
-          const comp = await processImages(`${currentPath}/${files[f]}`, `${currentPath}/`);
-          if(!comp) {
-            console.log(path.join(currentPath, files[f])+" not compressed")
-            break;
-          }
-          try {
-            await fsPromises.rename(path.join(__dirname, 'compressed', files[f]), path.join(currentPath, files[f]));
-            console.log(`File ${path.join(currentPath, files[f])} compressed and saved`);
-          } catch(err) {
-            console.log(`File ${path.join(currentPath, files[f])} compressed but not saved because ${err}`);
-          }
+  const loopThroughFolder = async (files, currentPath) => {
+    for (let f = 0; f < files.length; f++) {
+      if (fs.lstatSync(path.join(currentPath, files[f])).isFile()) {
+        const comp = await processImages(`${currentPath}/${files[f]}`, `${currentPath}/`);
+        if (!comp) {
+          console.log(path.join(currentPath, files[f]) + " not compressed")
+          continue;
+        }
+        try {
+          await fsPromises.rename(path.join(__dirname, 'compressed', files[f]), path.join(currentPath, files[f]));
+          console.log(`File ${path.join(currentPath, files[f])} compressed and saved`);
+        } catch (err) {
+          console.log(`File ${path.join(currentPath, files[f])} compressed but not saved because ${err}`);
+        }
 
       }
-      if(fs.lstatSync(path.join(currentPath, files[f])).isDirectory()) {
-        fs.readdir(path.join(currentPath, files[f]), async(err, innerFiles)=>{
-          if(err) {
-            return res.status(500).send('Something went wrong');
+      if (fs.lstatSync(path.join(currentPath, files[f])).isDirectory()) {
+        fs.readdir(path.join(currentPath, files[f]), async (err, innerFiles) => {
+          if (err) {
+            console.log("Couldn't open folder on path " + path.join(currentPath, files[f]) + " becuase of the error " + err);
+            return;
           }
           await loopThroughFolder(innerFiles, path.join(currentPath, files[f]));
         })
@@ -70,8 +70,8 @@ app.put('/compress-all', async(req, res)=>{
     }
   };
 
-  fs.readdir(path.join(__dirname, 'uploads'), async(err, uploadFiles)=>{
-    if(err) {
+  fs.readdir(path.join(__dirname, 'uploads'), async (err, uploadFiles) => {
+    if (err) {
       return res.status(500).send('Something went wrong');
     }
     await loopThroughFolder(uploadFiles, path.join(__dirname, 'uploads'));
@@ -80,18 +80,18 @@ app.put('/compress-all', async(req, res)=>{
 
 });
 
-app.post('*', (req, res)=> {
+app.post('*', (req, res) => {
   const contentType = req.headers['content-type'];
   if (!contentType || (contentType !== 'image/jpeg' && contentType !== 'image/jpg' && contentType !== 'image/png')) {
     return res.status(400).send('Only jpg, jpeg and png files are allowed');
   }
   const cleanUrl = decodeURIComponent(url.parse(req.url).pathname)
   const urlSplit = cleanUrl.split('/');
-  const imagePath = urlSplit.slice(0, urlSplit.length-1).join('/');
-  let writeStream = fs.createWriteStream(`./${urlSplit[(urlSplit.length-1)]}`);
+  const imagePath = urlSplit.slice(0, urlSplit.length - 1).join('/');
+  let writeStream = fs.createWriteStream(`./${urlSplit[(urlSplit.length - 1)]}`);
   req.pipe(writeStream);
-  req.on('end', ()=>{
-    compress_images(`./${urlSplit[(urlSplit.length-1)]}`, `${__dirname}/uploads${imagePath}/`, { compress_force: false, statistic: true, autoupdate: true }, false,
+  req.on('end', () => {
+    compress_images(`./${urlSplit[(urlSplit.length - 1)]}`, `${__dirname}/uploads${imagePath}/`, { compress_force: false, statistic: true, autoupdate: true }, false,
       { jpg: { engine: "mozjpeg", command: ["-quality", "60"] } },
       { png: { engine: "pngquant", command: ["--quality=20-50", "-o"] } },
       { svg: { engine: "svgo", command: "--multipass" } },
@@ -99,7 +99,7 @@ app.post('*', (req, res)=> {
       function (error, completed, statistic) {
         if (completed) {
           console.log("uploaded");
-          fs.unlinkSync(`./${urlSplit[(urlSplit.length-1)]}`);
+          fs.unlinkSync(`./${urlSplit[(urlSplit.length - 1)]}`);
           return res.status(200).send('Image uploaded successfully');
         }
         if (error) {
@@ -140,13 +140,13 @@ app.get('*', (req, res) => {
       return resize(`${__dirname}/uploads${cleanUrl}`, format, width, height).pipe(res)
     }
   } else {
-     return fileStore.get(cleanUrl, function (err, file) {
-       if (file) {
-         return res.sendFile(file.stream.path);
-       } else {
-         return res.status(404).send('Not found');
-       }
-     });
+    return fileStore.get(cleanUrl, function (err, file) {
+      if (file) {
+        return res.sendFile(file.stream.path);
+      } else {
+        return res.status(404).send('Not found');
+      }
+    });
 
     // Compress image if resize params where not sent
     /* if(!fs.existsSync(path.join(__dirname, 'uploads',...urlSplit))) {
