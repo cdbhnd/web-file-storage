@@ -5,12 +5,11 @@ const fileService = require("./file.service");
 const url = require('url');
 const resize = require('./resize')
 const newResize = require('./resize-new');
-const fs = require("fs");
 const path = require('path');
 const multer = require("multer");
 
 
-// set temp storage for middleware file upload
+// Set temp storage for middleware file upload
 const fileMulterStorage = multer.diskStorage({
   destination: function (req, file, callback) {
     callback(null, path.join(__dirname, "temp"));
@@ -22,7 +21,7 @@ const fileMulterStorage = multer.diskStorage({
 })
 const upload = multer({ storage: fileMulterStorage });
 
-// using file system
+// Using file system
 var fileStore = FileStore('fs', {
   path: path.join(__dirname, 'uploads')
 });
