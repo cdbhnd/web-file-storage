@@ -7,7 +7,7 @@ const path = require("path");
 
 const uploadFile = async (fromDirectory, toDirectory, file) => {
     if (file.mimetype === "image/png" || file.mimetype === "image/jpg" || file.mimetype === "image/jpeg") {
-        const files = await compressImages(fromDirectory, toDirectory);
+        const files = await compressImages(fromDirectory, toDirectory, file.filename);
         fs.unlinkSync(path.join(fromDirectory, file.filename));
         return files[0]["path"];
     }
@@ -15,8 +15,9 @@ const uploadFile = async (fromDirectory, toDirectory, file) => {
     return path.join(toDirectory, file.filename);
 }
 
-const compressImages = async (fromDirectory, toDirectory) => {
-    return await imagemin([`${fromDirectory}/*.{jpg,png}`], toDirectory, {
+const compressImages = async (fromDirectory, toDirectory, singleFileName) => {
+    const whatToCompress = !!singleFileName ? singleFileName : "*.{jpg,png,jpeg}";
+    return await imagemin([`${fromDirectory}/${whatToCompress}`], toDirectory, {
         plugins: [
             imageminJpegtran(),
             imageminPngquant({
