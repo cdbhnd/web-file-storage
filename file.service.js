@@ -5,7 +5,16 @@ const fs = require("fs");
 const fsPromise = require("fs").promises;
 const path = require("path");
 
-const uploadFile = async (fromDirectory, toDirectory, file) => {
+const uploadFile = async (fromDirectory, toDirectory, file, filePathsToCreate) => {
+    if (!fs.existsSync(toDirectory) || !fs.lstatSync().isDirectory()) {
+        let currentDir = __dirname;
+        for (let d = 0; d < filePathsToCreate.length; d++) {
+            currentDir = path.join(currentDir, `${filePathsToCreate[d]}`);
+            if (!fs.existsSync(currentDir) || !fs.lstatSync(currentDir).isDirectory()) {
+                fs.mkdirSync(currentDir, { recursive: true })
+            }
+        }
+    }
     if (file.mimetype === "image/png" || file.mimetype === "image/jpg" || file.mimetype === "image/jpeg") {
         const files = await compressImages(fromDirectory, toDirectory, file.filename);
         fs.unlinkSync(path.join(fromDirectory, file.filename));

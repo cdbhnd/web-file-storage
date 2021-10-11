@@ -64,7 +64,7 @@ app.post('*', upload.single("file"), async (req, res) => {
 
   //Upload file if possible
   try {
-    const filePath = await fileService.uploadFile(path.join(__dirname, "temp"), destination, req.file);
+    const filePath = await fileService.uploadFile(path.join(__dirname, "temp"), destination, req.file, ["uploads", ...urlSplit.slice(1, (urlSplit.length - 1))]);
     return res.status(200).send({ uploadedFilePath: filePath });
   } catch (e) {
     console.log(e);
