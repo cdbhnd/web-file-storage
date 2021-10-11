@@ -6,7 +6,7 @@ const fsPromise = require("fs").promises;
 const path = require("path");
 
 const uploadFile = async (fromDirectory, toDirectory, file, filePathsToCreate) => {
-    if (!fs.existsSync(toDirectory) || !fs.lstatSync().isDirectory()) {
+    if (!fs.existsSync(toDirectory) || !fs.lstatSync(toDirectory).isDirectory()) {
         let currentDir = __dirname;
         for (let d = 0; d < filePathsToCreate.length; d++) {
             currentDir = path.join(currentDir, `${filePathsToCreate[d]}`);
