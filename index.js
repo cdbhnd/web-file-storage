@@ -105,7 +105,6 @@ app.get('*', (req, res) => {
   else {
     return fileStore.get(cleanUrl, function (err, file) {
       if (file) {
-        res.set('Cache-control', 'public, max-age=31557600');
         return res.sendFile(file.stream.path);
       } else {
         return res.status(404).send('Not found');
@@ -116,4 +115,4 @@ app.get('*', (req, res) => {
 
 app.use(fileStore.routes);
 
-app.listen(4200);
+app.listen(8000);
